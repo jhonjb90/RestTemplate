@@ -1,10 +1,12 @@
 package restTemplateAndRedisNotBD.service.impl;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import restTemplateAndRedisNotBD.aggregates.constants.Constants;
 import restTemplateAndRedisNotBD.aggregates.response.ResponseSunat;
 import restTemplateAndRedisNotBD.redis.RedisService;
 import restTemplateAndRedisNotBD.service.InfoSunatService;
+import org.springframework.http.*;
 import restTemplateAndRedisNotBD.util.Util;
 
 import java.io.IOException;
@@ -18,6 +20,9 @@ public class InfoSunatServiceImpl implements InfoSunatService {
     public InfoSunatServiceImpl(RedisService redisService) {
         this.redisService = redisService;
     }
+
+    @Value("${token.api}")
+    private String token;
 
 
     @Override
@@ -39,5 +44,13 @@ public class InfoSunatServiceImpl implements InfoSunatService {
         return null;
     }
 
+    private ResponseSunat executeRestTemplate(String ruc){
+        String urlComplet = Constants.BASE_URL+"/v2/reniec/dni?numero="+ruc;
+    }
 
+    private HttpHeaders createHeaders(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization",Constants.BEABER+token);
+        return headers;
+    }
 }
