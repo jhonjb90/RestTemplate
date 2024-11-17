@@ -2,6 +2,7 @@ package restTemplateAndRedisNotBD.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import restTemplateAndRedisNotBD.aggregates.constants.Constants;
 import restTemplateAndRedisNotBD.aggregates.response.ResponseSunat;
 import restTemplateAndRedisNotBD.redis.RedisService;
@@ -16,9 +17,11 @@ import java.util.Objects;
 public class InfoSunatServiceImpl implements InfoSunatService {
 
     private final RedisService redisService;
+    private final RestTemplate restTemplate;
 
-    public InfoSunatServiceImpl(RedisService redisService) {
+    public InfoSunatServiceImpl(RedisService redisService, RestTemplate restTemplate) {
         this.redisService = redisService;
+        this.restTemplate = restTemplate;
     }
 
     @Value("${token.api}")
@@ -46,6 +49,17 @@ public class InfoSunatServiceImpl implements InfoSunatService {
 
     private ResponseSunat executeRestTemplate(String ruc){
         String urlComplet = Constants.BASE_URL+"/v2/reniec/dni?numero="+ruc;
+
+            ResponseEntity<ResponseSunat> execute =
+                    restTemplate.exchange(
+                            urlComplet, HttpMethod.GET,
+                            new HttpEntity<>(createHeaders()),
+                            ResponseSunat.class
+                    );
+            if (execute.getStatusCode().equals(HttpStatus.OK)){
+                return execute.getBody();
+            }
+            return  null;
     }
 
     private HttpHeaders createHeaders(){
