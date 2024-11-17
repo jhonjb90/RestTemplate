@@ -42,7 +42,14 @@ public class InfoSunatServiceImpl implements InfoSunatService {
                     ResponseSunat.class);
         } else {
             //no existe info en redis, por ende vamos a golpear a cliente externo
-
+            responseSunat = executeRestTemplate(ruc);
+            if(Objects.nonNull(responseSunat)){
+                String dataParaRedis =
+                        Util.convertirAString(responseSunat);
+                redisService.saveInRedis(Constants.REDIS_KEY_API_SUNAT+ruc,
+                        dataParaRedis,Constants.REDIS_TTL);
+                return responseSunat;
+            }
         }
         return null;
     }
