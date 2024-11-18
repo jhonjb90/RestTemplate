@@ -1,49 +1,44 @@
 package restTemplateAndRedisNotBD.service.impl;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import restTemplateAndRedisNotBD.aggregates.constants.Constants;
 import restTemplateAndRedisNotBD.aggregates.response.ResponseSunat;
 import restTemplateAndRedisNotBD.redis.RedisService;
 import restTemplateAndRedisNotBD.service.InfoSunatService;
-import org.springframework.http.*;
 import restTemplateAndRedisNotBD.util.Util;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class InfoSunatServiceImpl implements InfoSunatService {
 
     private final RedisService redisService;
     private final RestTemplate restTemplate;
 
-    public InfoSunatServiceImpl(RedisService redisService, RestTemplate restTemplate) {
-        this.redisService = redisService;
-        this.restTemplate = restTemplate;
-    }
-
     @Value("${token.api}")
     private String token;
-
-
     @Override
     public ResponseSunat getInfoSunat(String ruc) throws IOException {
         ResponseSunat responseSunat = new ResponseSunat();
-        //logica del diagrama
-        //recuperamos la informacion de redis
+        //Logica del diagrama:
+        //Recuperamos la información de redis
         String sunatRedisInfo = redisService.getDataFromRedis(
                 Constants.REDIS_KEY_API_SUNAT+ruc);
-        //validando info de redis
+        //Validando Info de Redis
         if(Objects.nonNull(sunatRedisInfo)){
-            //si existe info en redis
+            //si existe info enr edis
             responseSunat = Util.convertirDesdeString(sunatRedisInfo,
                     ResponseSunat.class);
-        } else {
-            //no existe info en redis, por ende vamos a golpear a cliente externo
+        } else{
+            //NO EXISTE INFO EN REDIS, POR ENDE VAMOS A GOLEPAR AL CLIENTE EXTERNO
             responseSunat = executeRestTemplate(ruc);
-            if(Objects.nonNull(responseSunat)){
+            if (Objects.nonNull(responseSunat)){
                 String dataParaRedis =
                         Util.convertirAString(responseSunat);
                 redisService.saveInRedis(Constants.REDIS_KEY_API_SUNAT+ruc,
@@ -51,22 +46,23 @@ public class InfoSunatServiceImpl implements InfoSunatService {
                 return responseSunat;
             }
         }
-        return null;
+        return responseSunat;
     }
 
     private ResponseSunat executeRestTemplate(String ruc){
-        String urlComplet = Constants.BASE_URL+"/v2/reniec/dni?numero="+ruc;
+        String urlComplete = Constants.BASE_URL+"/v2/sunat/ruc/full?numero="+ruc;
 
-            ResponseEntity<ResponseSunat> execute =
-                    restTemplate.exchange(
-                            urlComplet, HttpMethod.GET,
-                            new HttpEntity<>(createHeaders()),
-                            ResponseSunat.class
-                    );
-            if (execute.getStatusCode().equals(HttpStatus.OK)){
-                return execute.getBody();
-            }
-            return  null;
+        ResponseEntity<ResponseSunat> execute =
+                restTemplate.exchange(
+                        urlComplete,
+                        HttpMethod.GET,
+                        new HttpEntity<>(createHeaders()),
+                        ResponseSunat.class
+                );
+        if (execute.getStatusCode().equals(HttpStatus.OK)){
+            return execute.getBody();
+        }
+        return null;
     }
 
     private HttpHeaders createHeaders(){
@@ -74,4 +70,5 @@ public class InfoSunatServiceImpl implements InfoSunatService {
         headers.set("Authorization",Constants.BEABER+token);
         return headers;
     }
+
 }

@@ -23,5 +23,5 @@ public class InfoSunatController {
             @RequestParam("ruc") String ruc) throws IOException{
         return new ResponseEntity<>(infoSunatService.getInfoSunat(ruc), HttpStatus.OK);
     }
-    )
+
 }
